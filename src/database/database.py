@@ -1,12 +1,24 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+# src/database/db.py
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
 from src.conf.config import settings
 
-# Використовуємо database_url з settings
-SQLALCHEMY_DATABASE_URL = settings.database_url
+# Асинхронний URL для підключення до PostgreSQL
+SQLALCHEMY_DATABASE_URL = settings.database_url.replace("postgresql://", "postgresql+asyncpg://")
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Асинхронний двигун
+engine = create_async_engine(SQLALCHEMY_DATABASE_URL, echo=True)
+
+# Асинхронна сесія
+AsyncSessionLocal = sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+)
 
 Base = declarative_base()
+
+# Залежність для отримання асинхронної сесії
+async def get_db() -> AsyncSession:
+    async with AsyncSessionLocal() as session:
+        yield session
