@@ -1,5 +1,5 @@
 # Вибираємо базовий образ з Python 3.12
-FROM python:3.12-slim
+FROM python:3.13-slim
 
 # Встановлюємо необхідні системні пакети для Poetry та компіляції залежностей
 RUN apt-get update && apt-get install -y gcc curl
@@ -14,10 +14,14 @@ ENV PATH="/root/.local/bin:$PATH"
 WORKDIR /src
 
 # Копіюємо файли проєкту до контейнера
-COPY . /src
+COPY pyproject.toml poetry.lock ./
+COPY . .
+
+# Копіюємо .env файл
+COPY .env .env
 
 # Встановлюємо залежності через Poetry
-RUN poetry install --no-interaction --no-dev
+RUN poetry install --no-interaction --only main
 
 # Відкриваємо порт, який буде використовувати додаток
 EXPOSE 8000
